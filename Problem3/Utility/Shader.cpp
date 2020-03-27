@@ -1,6 +1,6 @@
 #include "Shader.hpp"
 
-    
+
 std::string Shader::readFile(const GLchar* path){
     std::string fileContent;
     
@@ -16,16 +16,16 @@ std::string Shader::readFile(const GLchar* path){
         fileStream<<fileStr.rdbuf();
         fileStream<<"\0";
         fileStr.close();
-
-        fileContent = fileStream.str();
+        
+        fileContent = fileStream.str().c_str();
     }
     catch(std::ifstream::failure e){
         std::cout<<"ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ"<<std::endl;
     }
-        
+    
     return fileContent;
 }
-    
+
 Shader::Shader(const GLchar* vertPath, const GLchar* fragPath){
     GLuint vertexShader = CreateShaderGL(GL_VERTEX_SHADER, vertPath);
     GLuint fragmentShader = CreateShaderGL(GL_FRAGMENT_SHADER, fragPath);
@@ -41,7 +41,8 @@ Shader::Shader(const GLchar* vertPath, const GLchar* fragPath){
 
 GLuint Shader::CreateShaderGL(GLenum eShaderType, const GLchar* shaderPath){
     GLuint shader = glCreateShader(eShaderType);
-    const GLchar* shaderSource = (readFile(shaderPath)).c_str();
+    std::string shaderCode = readFile(shaderPath);
+    const GLchar* shaderSource = (const GLchar *) shaderCode.c_str();
     glShaderSource(shader, 1, &shaderSource, NULL);
     glCompileShader(shader);
     
