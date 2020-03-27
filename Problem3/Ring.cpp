@@ -1,4 +1,3 @@
-#include<iostream>
 #include<cmath>
 
 //GLEW
@@ -22,19 +21,32 @@ const GLint WIDTH = 800, HEIGHT = 800;
 
 //Next we create a vertex data to draw
 int num_sides = 60;
-float radius = 0.8f;
+float rout = 0.8f;
+float rin = 0.4f;
 GLfloat *points;
 
 void SetData(){
-    for(int i=0;i<8*num_sides;i+=8){
-        points[i] = (float)radius*cos(i*M_PI/(4*num_sides));
-        points[i+1] = (float)radius*sin(i*M_PI/(4*num_sides));
-        points[i+2] = 0.0f;
-        points[i+3] = 1.0f;
-        points[i+4] = 1.0f;
-        points[i+5] = 1.0f;
-        points[i+6] = (float)radius*(1+cos(i*M_PI/(4*num_sides)))/2.0f;
-        points[i+7] = (float)radius*(1+sin(i*M_PI/(4*num_sides)))/2.0f;
+    for(int i=0;i<16*(num_sides+2);i+=8){
+        if((i/8)%2==0){
+            points[i] = (float)rout*cos(i*M_PI/(4*num_sides));
+            points[i+1] = (float)rout*sin(i*M_PI/(4*num_sides));
+            points[i+2] = 0.0f;
+            points[i+3] = 1.0f;
+            points[i+4] = 1.0f;
+            points[i+5] = 1.0f;
+            points[i+6] = 0.5f+(float)rout*cos(i*M_PI/(4*num_sides))/2.0f;
+            points[i+7] = 0.5f+(float)rout*sin(i*M_PI/(4*num_sides))/2.0f;
+        }
+        else{
+            points[i] = (float)rin*cos(i*M_PI/(4*num_sides));
+            points[i+1] = (float)rin*sin(i*M_PI/(4*num_sides));
+            points[i+2] = 0.0f;
+            points[i+3] = 1.0f;
+            points[i+4] = 1.0f;
+            points[i+5] = 1.0f;
+            points[i+6] = 0.5f+(float)rin*cos(i*M_PI/(4*num_sides))/2.0f;
+            points[i+7] = 0.5f+(float)rin*sin(i*M_PI/(4*num_sides))/2.0f;
+        }
     }
 }
 
@@ -73,7 +85,7 @@ int main(){
     Shader shader("Shaders/vertex_shader.vs", "Shaders/fragment_shader.fs");
     Texture texture1("Images/moon.jpg");
     
-    points = new GLfloat[8*num_sides];
+    points = new GLfloat[16*(num_sides+2)];
     SetData();
     
     GLuint VBO, VAO;
@@ -82,14 +94,13 @@ int main(){
     
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, 8*num_sides*sizeof(points[0]), points, GL_STATIC_DRAW);
-    
+    glBufferData(GL_ARRAY_BUFFER, 16*(num_sides+2)*sizeof(points[0]), points, GL_STATIC_DRAW);
     glVertexAttribPointer(0,3, GL_FLOAT, GL_FALSE, 8*sizeof(GLfloat), (GLvoid*) 0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1,3, GL_FLOAT, GL_FALSE, 8*sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(2,2, GL_FLOAT, GL_FALSE, 8*sizeof(GLfloat), (GLvoid*)(6*sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
     
     glBindVertexArray(0);
     
@@ -112,7 +123,7 @@ int main(){
         shader.use();
         texture1.use();
         glBindVertexArray(VAO);
-        glDrawArrays(GL_LINE_LOOP, 0, num_sides);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 2*(num_sides+2));
         glBindVertexArray(0);
         
         //swap screen buffers
