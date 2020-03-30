@@ -41,8 +41,9 @@ Shader::Shader(const GLchar* vertPath, const GLchar* fragPath){
 
 GLuint Shader::CreateShaderGL(GLenum eShaderType, const GLchar* shaderPath){
     GLuint shader = glCreateShader(eShaderType);
-    std::string shaderCode = readFile(shaderPath);
-    const GLchar* shaderSource = (const GLchar *) shaderCode.c_str();
+   std::string shaderCode = readFile(shaderPath);
+   const GLchar* shaderSource = (const GLchar *) shaderCode.c_str();
+    
     glShaderSource(shader, 1, &shaderSource, NULL);
     glCompileShader(shader);
     

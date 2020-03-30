@@ -20,42 +20,6 @@ void framebuffer_size_callback(GLFWwindow* window, int screenwidth, int screenhe
 //Window dimensions
 const GLint WIDTH = 800, HEIGHT = 800;
 
-glm::vec3 points[6*64];  //for color
-glm::vec3 cell_color[6*64];
-glm::vec2 text[6*64];
-glm::vec3 locations[12] = {
-    glm::vec3(-1.0f,1.0f,0.0),
-    glm::vec3(-1.0f,0.0f,0.0),
-    glm::vec3(0.0f,1.0f,0.0),
-    glm::vec3(-1.0f,0.0f,0.0),
-    glm::vec3(0.0f,1.0f,0.0),
-    glm::vec3(0.0f,0.0f,0.0),  //first square
-};
-
-glm::vec3 color[2] ={
-    glm::vec3(139.0f/255.0f,69.0f/255.0f,19.0f/255.0f),
-    glm::vec3(1.0f,1.0f,1.0f)
-};
-
-int ind = 0;
-
-void DrawChess(){
-    for(int j =-4;j<4;j++){
-        for(int i = -3;i<5;i++){
-            glm::mat4 trans = glm::mat4(1.0f);
-            trans = glm::scale(trans, glm::vec3(1.0f/5.0f,1.0f/5.0f,0.0f));
-            trans = glm::translate(trans, glm::vec3((float)i, (float)j,0.0f));
-            for(int k=0;k<6;k++){
-                glm::vec4 fin = trans * glm::vec4(locations[k].x, locations[k].y, locations[k].z, 1.0f);
-                points[ind] = glm::vec3(fin.x, fin.y, fin.z);
-                cell_color[ind] = color[(i+j+7)%2];
-                text[ind] = glm::vec2(points[ind].x, points[ind].y); ;
-                ind++;
-            }
-        }
-    }
-}
-
 int main(){
     //Initialise glfw
     glfwInit();
@@ -89,26 +53,38 @@ int main(){
     
     //Now we will build and compile our shaders
     Shader shader("Shaders/vertex_shader.vs", "Shaders/fragment_shader.fs");
-    Texture texture1("Images/wooden.jpg");
-    DrawChess();
+    Texture texture1("Images/Chess_template.jpg");
     
-    GLuint VBO, VAO;
+    GLfloat vertices[]={
+        // positions          // colors           // texture coords
+        1.0f,  1.0f, 0.0f,    1.0f, 1.0f, 1.0f,   4.0f, 4.0f, // top right
+        1.0f, -1.0f, 0.0f,    1.0f, 1.0f, 1.0f,   4.0f, 0.0f, // bottom right
+        -1.0f, -1.0f, 0.0f,   1.0f, 1.0f, 1.0f,   0.0f, 0.0f, // bottom left
+        -1.0f,  1.0f, 0.0f,   1.0f, 1.0f, 1.0f,   0.0f, 4.0f  // top left
+    };
+    
+    GLuint indices[] = {
+        0, 1, 3, // first triangle
+        1, 2, 3  // second triangle
+    };
+    
+    GLuint VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
     
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(points)+sizeof(cell_color)+sizeof(text), NULL, GL_STATIC_DRAW);
-    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(points), points );
-    glBufferSubData( GL_ARRAY_BUFFER, sizeof(points), sizeof(cell_color), cell_color );
-    glBufferSubData( GL_ARRAY_BUFFER, sizeof(points)+sizeof(cell_color), sizeof(text), text );
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     
-    glVertexAttribPointer(0,3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (GLvoid*) 0);
+    glVertexAttribPointer(0,3, GL_FLOAT, GL_FALSE, 8*sizeof(GLfloat), (GLvoid*) 0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1,3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (GLvoid*)(sizeof(points)));
+    glVertexAttribPointer(1,3, GL_FLOAT, GL_FALSE, 8*sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2,2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (GLvoid*)(sizeof(points)+sizeof(cell_color)));
+    glVertexAttribPointer(2,2, GL_FLOAT, GL_FALSE, 8*sizeof(GLfloat), (GLvoid*)(6*sizeof(GLfloat)));
     glEnableVertexAttribArray(2);
     
     glBindVertexArray(0);
@@ -133,7 +109,7 @@ int main(){
         shader.use();
         texture1.use();
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 64*6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
         
         //swap screen buffers
